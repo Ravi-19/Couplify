@@ -1,11 +1,12 @@
 const logger = require("../logger");
 
+const { errorResponse } = require("../utils/apiResponse");
+
 const errorMiddleware = (err, req, res, next) => {
   const statusCode = err.statusCode || 500;
 
   const isProd = process.env.NODE_ENV === "production";
 
-  // Log full error internally
   logger.error(
     {
       message: err.message,
@@ -18,20 +19,20 @@ const errorMiddleware = (err, req, res, next) => {
     "Unhandled Error"
   );
 
-  return res.status(statusCode).json({
-    success: false,
-    message:
-      isProd && statusCode === 500
-        ? "Internal Server Error"
-        : err.message,
-
-    error: {
+  return errorResponse(
+    res,
+    isProd && statusCode === 500
+      ? "Internal Server Error"
+      : err.message,
+    {
       code: err.code || "INTERNAL_ERROR",
 
-      // only expose details if safe
-      details: isProd ? null : err.details || null,
+      details: isProd
+        ? null
+        : err.details || null,
     },
-  });
+    statusCode
+  );
 };
 
 module.exports = errorMiddleware;

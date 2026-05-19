@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-
+const authRoutes = require("./modules/auth/auth.routes");
 const requestLogger = require("./logger/requestLogger");
 const errorMiddleware = require("./middleware/errorMiddleware");
+const ApiError = require("./utils/ApiError");
 
 const app = express();
 
@@ -28,16 +29,22 @@ app.get("/health", (req, res) => {
   });
 });
 
+// main business logic routes
+app.use("/api/v1/auth", authRoutes);
+
 /**
  * ======================
  * 404 HANDLER
  * ======================
  */
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
+app.use((req, res, next) => {
+  next(
+    new ApiError(
+      404,
+      `Route not found: ${req.originalUrl}`,
+      "ROUTE_NOT_FOUND"
+    )
+  );
 });
 
 /**
